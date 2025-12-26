@@ -3,7 +3,11 @@ import { CommonEngine } from '@angular/ssr';
 import express from 'express';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
+import fs from 'node:fs';
+import * as mm from 'music-metadata';
 import bootstrap from './src/main.server';
+
+const MUSIC_PATH = '/home/centos_youssef/Documents/Code/Python/SpotDl/music';
 
 // The Express app is exported so that it can be used by serverless Functions.
 export function app(): express.Express {
@@ -17,8 +21,86 @@ export function app(): express.Express {
   server.set('view engine', 'html');
   server.set('views', browserDistFolder);
 
-  // Example Express Rest API endpoints
-  // server.get('/api/**', (req, res) => { });
+  // API for Local Library
+  server.get('/api/local-library', async (req, res) => {
+    try {
+      if (!fs.existsSync(MUSIC_PATH)) {
+        res.json([]);
+        return;
+      }
+
+      const files = fs.readdirSync(MUSIC_PATH).filter(f => 
+        ['.mp3', '.m4a', '.wav', '.flac'].includes(f.toLowerCase().slice(-4))
+      );
+
+      const songs = await Promise.all(files.map(async (file, index) => {
+        const filePath = join(MUSIC_PATH, file);
+        const metadata = await mm.parseFile(filePath);
+        
+        const artistName = metadata.common.artist || 'Unknown Artist';
+        const albumName = metadata.common.album || 'Unknown Album';
+        
+        return {
+          id: `local-${index}`,
+          title: metadata.common.title || file.replace(/\.[^/.]+$/, ""),
+          duration: Math.round(metadata.format.duration || 0),
+          audioUrl: `/api/stream/${encodeURIComponent(file)}`,
+          coverUrl: metadata.common.picture ? `/api/cover/${encodeURIComponent(file)}` : 'https://via.placeholder.com/300?text=No+Cover',
+          releaseDate: metadata.common.date ? new Date(metadata.common.date) : new Date(),
+          playCount: 0,
+          genre: { id: 'local', name: metadata.common.genre?.[0] || 'Local', description: '' },
+          artist: {
+            id: `artist-${artistName.toLowerCase().replace(/ /g, '-')}`,
+            name: artistName,
+            imageUrl: 'https://via.placeholder.com/300?text=' + encodeURIComponent(artistName),
+            bio: '',
+            followers: 0
+          },
+          album: {
+            id: `album-${albumName.toLowerCase().replace(/ /g, '-')}`,
+            title: albumName,
+            artist: { name: artistName } as any,
+            coverUrl: metadata.common.picture ? `/api/cover/${encodeURIComponent(file)}` : 'https://via.placeholder.com/300?text=No+Cover',
+            releaseDate: metadata.common.date ? new Date(metadata.common.date) : new Date(),
+            totalDuration: 0,
+            songCount: 0
+          }
+        };
+      }));
+
+      res.json(songs);
+    } catch (error) {
+      console.error('Error scanning local library:', error);
+      res.status(500).send('Internal Server Error');
+    }
+  });
+
+  server.get('/api/stream/:filename', (req, res) => {
+    const filePath = join(MUSIC_PATH, decodeURIComponent(req.params.filename));
+    if (fs.existsSync(filePath)) {
+      res.sendFile(filePath);
+    } else {
+      res.status(404).send('File not found');
+    }
+  });
+
+  server.get('/api/cover/:filename', async (req, res) => {
+    try {
+      const filePath = join(MUSIC_PATH, decodeURIComponent(req.params.filename));
+      const metadata = await mm.parseFile(filePath);
+      const picture = metadata.common.picture?.[0];
+      
+      if (picture) {
+        res.contentType(picture.format);
+        res.send(picture.data);
+      } else {
+        res.redirect('https://via.placeholder.com/300?text=No+Cover');
+      }
+    } catch (error) {
+      res.status(500).send('Error extracting cover');
+    }
+  });
+
   // Serve static files from /browser
   server.get('*.*', express.static(browserDistFolder, {
     maxAge: '1y'

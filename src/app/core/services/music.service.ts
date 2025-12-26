@@ -1,67 +1,114 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of, throwError } from 'rxjs';
-import { catchError, delay } from 'rxjs/operators';
+import { Observable, of, throwError, shareReplay } from 'rxjs';
+import { catchError, delay, map } from 'rxjs/operators';
 import { Song, Album, Artist, Playlist, Genre } from '../models/music.model';
 import { MOCK_SONGS, MOCK_ALBUMS, MOCK_ARTISTS, MOCK_PLAYLISTS, MOCK_GENRES } from './mock-data';
 
 @Injectable({ providedIn: 'root' })
 export class MusicService {
   private apiUrl = '/api/music';
+  private localSongs$: Observable<Song[]>;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+    this.localSongs$ = this.http.get<Song[]>('/api/local-library').pipe(
+      catchError(() => of(MOCK_SONGS)),
+      map(songs => songs.length > 0 ? songs : MOCK_SONGS),
+      shareReplay(1)
+    );
+  }
 
   // Songs
   getSongs(): Observable<Song[]> {
-    // Return mock data with a slight delay to simulate API call
-    return of(MOCK_SONGS).pipe(delay(300));
+    return this.localSongs$;
   }
 
   getSongById(id: string): Observable<Song> {
-    const song = MOCK_SONGS.find(s => s.id === id);
-    return song ? of(song).pipe(delay(300)) : this.handleError('Song not found', null);
+    return this.getSongs().pipe(
+      map(songs => {
+        const song = songs.find(s => s.id === id);
+        if (!song) throw new Error('Song not found');
+        return song;
+      }),
+      catchError(err => this.handleError(err.message, null))
+    );
   }
 
   getSongsByGenre(genreId: string): Observable<Song[]> {
-    const songs = MOCK_SONGS.filter(s => s.genre.id === genreId);
-    return of(songs).pipe(delay(300));
+    return this.getSongs().pipe(
+      map(songs => songs.filter(s => s.genre.id === genreId))
+    );
   }
 
   // Albums
   getAlbums(): Observable<Album[]> {
-    return of(MOCK_ALBUMS).pipe(delay(300));
+    return this.getSongs().pipe(
+      map(songs => {
+        const albumsMap = new Map<string, Album>();
+        songs.forEach(s => {
+          if (!albumsMap.has(s.album.id)) {
+            albumsMap.set(s.album.id, {
+              ...s.album,
+              songCount: songs.filter(song => song.album.id === s.album.id).length
+            });
+          }
+        });
+        return Array.from(albumsMap.values());
+      })
+    );
   }
 
   getAlbumById(id: string): Observable<Album> {
-    const album = MOCK_ALBUMS.find(a => a.id === id);
-    return album ? of(album).pipe(delay(300)) : this.handleError('Album not found', null);
+    return this.getAlbums().pipe(
+      map(albums => {
+        const album = albums.find(a => a.id === id);
+        if (!album) throw new Error('Album not found');
+        return album;
+      })
+    );
   }
 
   getAlbumSongs(albumId: string): Observable<Song[]> {
-    // For demo, return some songs with matching album id
-    const album = MOCK_ALBUMS.find(a => a.id === albumId);
-    const songs = album ? MOCK_SONGS.filter(s => s.album.id === albumId) : [];
-    return of(songs).pipe(delay(300));
+    return this.getSongs().pipe(
+      map(songs => songs.filter(s => s.album.id === albumId))
+    );
   }
 
   // Artists
   getArtists(): Observable<Artist[]> {
-    return of(MOCK_ARTISTS).pipe(delay(300));
+    return this.getSongs().pipe(
+      map(songs => {
+        const artistsMap = new Map<string, Artist>();
+        songs.forEach(s => {
+          if (!artistsMap.has(s.artist.id)) {
+            artistsMap.set(s.artist.id, s.artist);
+          }
+        });
+        return Array.from(artistsMap.values());
+      })
+    );
   }
 
   getArtistById(id: string): Observable<Artist> {
-    const artist = MOCK_ARTISTS.find(a => a.id === id);
-    return artist ? of(artist).pipe(delay(300)) : this.handleError('Artist not found', null);
+    return this.getArtists().pipe(
+      map(artists => {
+        const artist = artists.find(a => a.id === id);
+        if (!artist) throw new Error('Artist not found');
+        return artist;
+      })
+    );
   }
 
   getArtistAlbums(artistId: string): Observable<Album[]> {
-    const albums = MOCK_ALBUMS.filter(a => a.id === artistId);
-    return of(albums).pipe(delay(300));
+    return this.getAlbums().pipe(
+      map(albums => albums.filter(a => a.artist.id === artistId))
+    );
   }
 
   getArtistSongs(artistId: string): Observable<Song[]> {
-    const songs = MOCK_SONGS.filter(s => s.artist.id === artistId);
-    return of(songs).pipe(delay(300));
+    return this.getSongs().pipe(
+      map(songs => songs.filter(s => s.artist.id === artistId))
+    );
   }
 
   // Playlists
@@ -82,6 +129,7 @@ export class MusicService {
       createdAt: now,
       updatedAt: now
     };
+    MOCK_PLAYLISTS.push(newPlaylist);
     return of(newPlaylist).pipe(delay(300));
   }
 
@@ -98,11 +146,10 @@ export class MusicService {
   addSongToPlaylist(playlistId: string, songId: string): Observable<Playlist> {
     const playlist = MOCK_PLAYLISTS.find(p => p.id === playlistId);
     if (playlist) {
-      const song = MOCK_SONGS.find(s => s.id === songId);
-      if (song) {
+      this.getSongById(songId).subscribe(song => {
         playlist.songs.push(song);
         playlist.songCount = playlist.songs.length;
-      }
+      });
       return of(playlist).pipe(delay(300));
     }
     return this.handleError('Playlist not found', null);
