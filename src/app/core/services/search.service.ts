@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
-import { map, delay } from 'rxjs/operators';
+import { Observable, of, forkJoin } from 'rxjs';
+import { map, delay, catchError } from 'rxjs/operators';
 import { Song, Album, Artist } from '../models/music.model';
 import { MusicService } from './music.service';
+import { HttpClient } from '@angular/common/http';
 
 export interface SearchResult {
   id: string;
@@ -10,18 +11,19 @@ export interface SearchResult {
   name: string;
   artist?: string;
   imageUrl?: string;
+  source?: 'local' | 'youtube';
 }
 
 @Injectable({ providedIn: 'root' })
 export class SearchService {
 
-  constructor(private musicService: MusicService) {}
+  constructor(private musicService: MusicService, private http: HttpClient) {}
 
   search(query: string): Observable<SearchResult[]> {
     const q = query.toLowerCase().trim();
     if (!q) return of([]);
 
-    return this.musicService.getSongs().pipe(
+    const localSearch$ = this.musicService.getSongs().pipe(
       map(songs => {
         const songResults: SearchResult[] = songs
           .filter(s => s.title.toLowerCase().includes(q) || s.artist.name.toLowerCase().includes(q))
@@ -30,7 +32,8 @@ export class SearchService {
             type: 'song',
             name: s.title,
             artist: s.artist.name,
-            imageUrl: s.coverUrl
+            imageUrl: s.coverUrl,
+            source: 'local'
           }));
 
         const albumsMap = new Map<string, SearchResult>();
@@ -58,7 +61,25 @@ export class SearchService {
           }
         });
 
-        return [...Array.from(artistsMap.values()), ...Array.from(albumsMap.values()), ...songResults].slice(0, 10);
+        return [...Array.from(artistsMap.values()), ...Array.from(albumsMap.values()), ...songResults];
+      })
+    );
+
+    const youtubeSearch$ = this.http.get<Song[]>('/api/search/youtube', { params: { q } }).pipe(
+      map(songs => songs.map(s => ({
+        id: s.id,
+        type: 'song' as const,
+        name: s.title,
+        artist: s.artist.name,
+        imageUrl: s.coverUrl,
+        source: 'youtube' as const
+      }))),
+      catchError(() => of([] as SearchResult[]))
+    );
+
+    return forkJoin([localSearch$, youtubeSearch$]).pipe(
+      map(([localResults, youtubeResults]) => {
+        return [...localResults, ...youtubeResults].slice(0, 15);
       }),
       delay(300)
     );

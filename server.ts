@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 import fs from 'node:fs';
 import * as mm from 'music-metadata';
+import ytsr from 'ytsr';
 import bootstrap from './src/main.server';
 
 const MUSIC_PATH = '/home/centos_youssef/Documents/Code/Python/SpotDl/music';
@@ -22,6 +23,61 @@ export function app(): express.Express {
   server.set('views', browserDistFolder);
 
   // API for Local Library
+  server.get('/api/search/youtube', async (req, res) => {
+    try {
+      const query = req.query['q'] as string;
+      if (!query) {
+        res.json([]);
+        return;
+      }
+
+      const filters = await ytsr.getFilters(query);
+      const filter = filters.get('Type')?.get('Video');
+      
+      if (!filter || !filter.url) {
+        res.json([]);
+        return;
+      }
+
+      const searchResults = await ytsr(filter.url, { limit: 10 });
+      const songs = searchResults.items.filter(item => item.type === 'video').map(item => {
+        const video = item as ytsr.Video;
+        return {
+          id: `yt-${video.id}`,
+          title: video.title,
+          duration: parseDuration(video.duration || '0:00'),
+          audioUrl: `https://www.youtube.com/watch?v=${video.id}`,
+          coverUrl: video.bestThumbnail.url,
+          releaseDate: new Date(),
+          playCount: 0,
+          source: 'youtube',
+          genre: { id: 'youtube', name: 'YouTube', description: '' },
+          artist: {
+            id: `yt-author-${video.author?.channelID || 'unknown'}`,
+            name: video.author?.name || 'Unknown Artist',
+            imageUrl: video.author?.bestAvatar?.url || 'https://via.placeholder.com/300?text=YT',
+            bio: '',
+            followers: 0
+          },
+          album: {
+            id: `yt-album-${video.id}`,
+            title: 'YouTube Video',
+            artist: { name: video.author?.name || 'Unknown Artist' } as any,
+            coverUrl: video.bestThumbnail.url,
+            releaseDate: new Date(),
+            totalDuration: 0,
+            songCount: 0
+          }
+        };
+      });
+
+      res.json(songs);
+    } catch (error) {
+      console.error('YouTube search error:', error);
+      res.status(500).send('YouTube search failed');
+    }
+  });
+
   server.get('/api/local-library', async (req, res) => {
     try {
       if (!fs.existsSync(MUSIC_PATH)) {
@@ -123,6 +179,15 @@ export function app(): express.Express {
   });
 
   return server;
+}
+
+function parseDuration(duration: string): number {
+  const parts = duration.split(':').reverse();
+  let seconds = 0;
+  for (let i = 0; i < parts.length; i++) {
+    seconds += parseInt(parts[i]) * Math.pow(60, i);
+  }
+  return seconds;
 }
 
 function run(): void {

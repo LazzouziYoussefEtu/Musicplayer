@@ -27,6 +27,7 @@
     "music-metadata": "^11.10.3",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
+    "ytsr": "^3.8.4",
     "zone.js": "~0.14.3"
   },
   "devDependencies": {

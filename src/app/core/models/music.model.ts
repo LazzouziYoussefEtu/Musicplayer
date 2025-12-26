@@ -35,6 +35,7 @@ export interface Song {
   genre: Genre;
   releaseDate: Date;
   playCount: number;
+  source?: 'local' | 'youtube';
   createdAt?: Date;
 }
 
