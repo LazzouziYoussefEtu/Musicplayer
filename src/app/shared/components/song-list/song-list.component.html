@@ -75,7 +75,7 @@
           <mat-icon>add_to_queue</mat-icon>
           <span>Add to queue</span>
         </button>
-        <button mat-menu-item>
+        <button mat-menu-item [matMenuTriggerFor]="playlistsMenu">
           <mat-icon>playlist_add</mat-icon>
           <span>Add to playlist</span>
         </button>
@@ -87,6 +87,18 @@
         <button mat-menu-item [routerLink]="['/album', song.album.id]">
           <mat-icon>album</mat-icon>
           <span>Go to album</span>
+        </button>
+      </mat-menu>
+
+      <mat-menu #playlistsMenu="matMenu">
+        <button mat-menu-item *ngFor="let p of playlists$ | async" (click)="addToPlaylist(song, p)">
+          <mat-icon>playlist_play</mat-icon>
+          <span>{{ p.title }}</span>
+        </button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item routerLink="/playlists">
+          <mat-icon>add</mat-icon>
+          <span>Create new playlist</span>
         </button>
       </mat-menu>
     </td>

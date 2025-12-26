@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
@@ -6,8 +6,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
-import { Song } from '../../../core/models/music.model';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { Song, Playlist } from '../../../core/models/music.model';
 import { PlayerService } from '../../../core/services/player.service';
+import { MusicService } from '../../../core/services/music.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-song-list',
@@ -20,12 +23,13 @@ import { PlayerService } from '../../../core/services/player.service';
     MatIconModule,
     MatMenuModule,
     MatDividerModule,
+    MatSnackBarModule,
     DatePipe
   ],
   templateUrl: './song-list.component.html',
   styleUrls: ['./song-list.component.scss']
 })
-export class SongListComponent implements OnChanges {
+export class SongListComponent implements OnChanges, OnInit {
   @Input() songs: Song[] = [];
   @Input() showArtist = true;
   @Input() showAlbum = true;
@@ -34,8 +38,17 @@ export class SongListComponent implements OnChanges {
   @Input() context: 'playlist' | 'album' | 'artist' | 'library' = 'library';
 
   displayedColumns: string[] = [];
+  playlists$: Observable<Playlist[]> | null = null;
 
-  constructor(public playerService: PlayerService) {}
+  constructor(
+    public playerService: PlayerService,
+    private musicService: MusicService,
+    private snackBar: MatSnackBar
+  ) {}
+
+  ngOnInit(): void {
+    this.playlists$ = this.musicService.getPlaylists();
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     this.updateColumns();
@@ -44,7 +57,6 @@ export class SongListComponent implements OnChanges {
   updateColumns() {
     this.displayedColumns = ['index', 'title'];
     
-    // In Album detail, we usually don't show Album column
     if (this.showAlbum && this.context !== 'album') {
       this.displayedColumns.push('album');
     }
@@ -67,6 +79,18 @@ export class SongListComponent implements OnChanges {
 
   addToQueue(song: Song) {
     this.playerService.addToQueue(song);
+    this.snackBar.open(`Added "${song.title}" to queue`, 'Close', { duration: 3000 });
+  }
+
+  addToPlaylist(song: Song, playlist: Playlist) {
+    this.musicService.addSongToPlaylist(playlist.id, song.id).subscribe({
+      next: () => {
+        this.snackBar.open(`Added "${song.title}" to "${playlist.title}"`, 'Close', { duration: 3000 });
+      },
+      error: () => {
+        this.snackBar.open('Failed to add song to playlist', 'Close', { duration: 3000 });
+      }
+    });
   }
 
   formatDuration(seconds: number): string {
