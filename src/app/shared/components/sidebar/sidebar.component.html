@@ -18,18 +18,21 @@
 
     <mat-divider></mat-divider>
 
-    <!-- Playlists Section (Future) -->
+    <!-- Playlists Section -->
     <div class="nav-section">
       <h3 class="section-title">Playlists</h3>
-      <button mat-button class="create-playlist-btn">
+      <button mat-button class="create-playlist-btn" (click)="createNewPlaylist()">
         <mat-icon>add</mat-icon>
         <span>Create Playlist</span>
       </button>
       <mat-nav-list>
-        <!-- Playlists will be populated dynamically -->
-        <mat-list-item class="playlist-item">
+        <mat-list-item 
+          *ngFor="let playlist of playlists$ | async" 
+          [routerLink]="['/playlists', playlist.id]"
+          [class.active]="isActive('/playlists/' + playlist.id)"
+          class="playlist-item">
           <mat-icon matListItemIcon>playlist_play</mat-icon>
-          <span matListItemTitle>My Playlist</span>
+          <span matListItemTitle>{{ playlist.title }}</span>
         </mat-list-item>
       </mat-nav-list>
     </div>

@@ -21,6 +21,10 @@
 </mat-toolbar>
 
 <mat-menu #userMenu="matMenu" class="user-menu">
+  <button mat-menu-item [matMenuTriggerFor]="switchUserMenu">
+    <mat-icon>switch_account</mat-icon>
+    <span>Switch User</span>
+  </button>
   <button mat-menu-item>
     <mat-icon>settings</mat-icon>
     <span>Settings</span>
@@ -29,5 +33,12 @@
   <button mat-menu-item (click)="onLogout()">
     <mat-icon>logout</mat-icon>
     <span>Logout</span>
+  </button>
+</mat-menu>
+
+<mat-menu #switchUserMenu="matMenu">
+  <button mat-menu-item *ngFor="let u of availableUsers" (click)="onSwitchUser(u)">
+    <mat-icon *ngIf="u.id === user?.id">check</mat-icon>
+    <span [style.margin-left.px]="u.id === user?.id ? 0 : 32">{{ u.name }}</span>
   </button>
 </mat-menu>
