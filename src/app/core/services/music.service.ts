@@ -24,6 +24,9 @@ export class MusicService {
   }
 
   getSongById(id: string): Observable<Song> {
+    if (id.startsWith('yt-')) {
+      return this.getYoutubeSongById(id);
+    }
     return this.getSongs().pipe(
       map(songs => {
         const song = songs.find(s => s.id === id);
@@ -31,6 +34,24 @@ export class MusicService {
         return song;
       }),
       catchError(err => this.handleError(err.message, null))
+    );
+  }
+
+  private getYoutubeSongById(id: string): Observable<Song> {
+    // For simplicity, we fetch it from search results or just re-request if we had a dedicated endpoint
+    // Since we don't have a dedicated "getYoutubeById", we'll simulate it by returning the song 
+    // if it was recently searched, or making a targeted search.
+    // However, the cleanest way for this demo is to have the search service provide the full song object
+    // Or add a dedicated backend endpoint for YouTube video details.
+    
+    // For now, let's assume we can fetch basic details from a specific search
+    const videoId = id.replace('yt-', '');
+    return this.http.get<Song[]>('/api/search/youtube', { params: { q: videoId } }).pipe(
+      map(songs => {
+        const song = songs.find(s => s.id === id);
+        if (!song) throw new Error('YouTube Song not found');
+        return song;
+      })
     );
   }
 

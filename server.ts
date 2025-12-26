@@ -31,15 +31,22 @@ export function app(): express.Express {
         return;
       }
 
-      const filters = await ytsr.getFilters(query);
-      const filter = filters.get('Type')?.get('Video');
+      // Check if query looks like a video ID (11 chars) or a full URL
+      const isId = /^[a-zA-Z0-9_-]{11}$/.test(query);
       
-      if (!filter || !filter.url) {
-        res.json([]);
-        return;
+      let searchResults;
+      if (isId) {
+        searchResults = await ytsr(`https://www.youtube.com/watch?v=${query}`, { limit: 1 });
+      } else {
+        const filters = await ytsr.getFilters(query);
+        const filter = filters.get('Type')?.get('Video');
+        if (!filter || !filter.url) {
+          res.json([]);
+          return;
+        }
+        searchResults = await ytsr(filter.url, { limit: 10 });
       }
 
-      const searchResults = await ytsr(filter.url, { limit: 10 });
       const songs = searchResults.items.filter(item => item.type === 'video').map(item => {
         const video = item as ytsr.Video;
         return {
