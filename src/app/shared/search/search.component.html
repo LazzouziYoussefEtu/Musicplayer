@@ -1,0 +1,18 @@
+<mat-form-field appearance="outline" class="search-field">
+  <mat-label>Search</mat-label>
+  <input
+    matInput
+    [formControl]="ctrl"
+    [matAutocomplete]="auto"
+  />
+  <mat-icon matSuffix>search</mat-icon>
+
+  <mat-autocomplete #auto="matAutocomplete" (optionSelected)="select($event.option.value)">
+    <mat-option *ngFor="let item of results$ | async" [value]="item">
+      {{ item.name }} <span *ngIf="item.artist">- {{ item.artist }}</span>
+    </mat-option>
+    <mat-option *ngIf="(results$ | async)?.length === 0 && ctrl.value.length > 0" disabled>
+      No results found
+    </mat-option>
+  </mat-autocomplete>
+</mat-form-field>

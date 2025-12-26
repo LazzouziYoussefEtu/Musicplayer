@@ -1,0 +1,55 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  app-header {
+    flex-shrink: 0;
+  }
+
+  .main-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+
+    app-sidebar {
+      flex-shrink: 0;
+    }
+
+    .main-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      background: var(--background);
+      background-attachment: fixed;
+      color: var(--text-primary);
+    }
+  }
+
+  app-player {
+    flex-shrink: 0;
+  }
+}
+
+/* Smooth fade-in animation for routed content */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+:deep(*) {
+  animation: fadeIn 0.3s ease-in-out;
+}

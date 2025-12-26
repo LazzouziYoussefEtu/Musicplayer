@@ -1,0 +1,19 @@
+<mat-card class="song-card" *ngIf="song">
+  <div class="card-image">
+    <img [src]="song.coverUrl" [alt]="song.title" class="song-cover">
+    <div class="card-overlay">
+      <button mat-fab (click)="playSong()" class="play-btn">
+        <mat-icon>play_arrow</mat-icon>
+      </button>
+      <button mat-icon-button (click)="addToPlaylist()" class="add-btn" matTooltip="Add to Playlist">
+        <mat-icon>add</mat-icon>
+      </button>
+    </div>
+  </div>
+  <mat-card-content class="card-content">
+    <h3 class="song-title">{{ song.title }}</h3>
+    <p class="song-artist">{{ song.artist.name }}</p>
+    <p class="song-album">{{ song.album.title }}</p>
+    <p class="song-genre">{{ song.genre.name }}</p>
+  </mat-card-content>
+</mat-card>

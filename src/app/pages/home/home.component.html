@@ -1,0 +1,28 @@
+<div class="home-container">
+  <div class="hero-section">
+    <h1>Welcome to MyMusic</h1>
+    <p>Discover and play your favorite songs</p>
+  </div>
+
+  <section class="music-section">
+    <h2>Recent Songs</h2>
+    <mat-grid-list cols="6" rowHeight="300px" gutterSize="16px">
+      <mat-grid-tile *ngFor="let song of recentSongs">
+        <app-song-card [song]="song"></app-song-card>
+      </mat-grid-tile>
+    </mat-grid-list>
+  </section>
+
+  <section class="music-section">
+    <h2>Popular Songs</h2>
+    <mat-grid-list cols="6" rowHeight="300px" gutterSize="16px">
+      <mat-grid-tile *ngFor="let song of popularSongs">
+        <app-song-card [song]="song"></app-song-card>
+      </mat-grid-tile>
+    </mat-grid-list>
+  </section>
+
+  <div class="loading" *ngIf="isLoading">
+    <p>Loading music...</p>
+  </div>
+</div>

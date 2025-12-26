@@ -1,1 +1,125 @@
-/* You can add global styles to this file, and also import other style files */
+@use '@angular/material' as mat;
+
+@include mat.core();
+
+// Define palettes
+$my-primary: mat.define-palette(mat.$indigo-palette);
+$my-accent: mat.define-palette(mat.$deep-purple-palette);
+
+// Define themes
+$my-light-theme: mat.define-light-theme((
+ color: (
+   primary: $my-primary,
+   accent: $my-accent,
+ )
+));
+
+$my-dark-theme: mat.define-dark-theme((
+ color: (
+   primary: $my-primary,
+   accent: $my-accent,
+ )
+));
+
+// Apply default theme (Light)
+@include mat.all-component-themes($my-light-theme);
+
+// Apply Dark Theme inside .dark-mode class
+.dark-mode {
+  @include mat.all-component-colors($my-dark-theme);
+}
+
+/* Color Variables for Light Mode */
+:root.light-mode {
+  --primary-color: #667eea;
+  --secondary-color: #764ba2;
+  --background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --surface: rgba(255, 255, 255, 0.95);
+  --surface-variant: rgba(255, 255, 255, 0.7);
+  --text-primary: #333;
+  --text-secondary: #666;
+  --text-tertiary: #999;
+  --border-color: rgba(255, 255, 255, 0.2);
+  --hover-overlay: rgba(102, 126, 234, 0.1);
+  --card-background: rgba(255, 255, 255, 0.9);
+  --toolbar-background: rgba(255, 255, 255, 0.7);
+  --sidebar-background: rgba(255, 255, 255, 0.95);
+  --scrollbar-thumb: rgba(0, 0, 0, 0.2);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.3);
+}
+
+/* Color Variables for Dark Mode */
+:root.dark-mode {
+  --primary-color: #667eea;
+  --secondary-color: #764ba2;
+  --background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  --surface: rgba(30, 30, 46, 0.95);
+  --surface-variant: rgba(30, 30, 46, 0.7);
+  --text-primary: #e8e8e8;
+  --text-secondary: #b0b0b0;
+  --text-tertiary: #808080;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --hover-overlay: rgba(102, 126, 234, 0.2);
+  --card-background: rgba(45, 45, 65, 0.9);
+  --toolbar-background: rgba(30, 30, 46, 0.95);
+  --sidebar-background: rgba(25, 25, 40, 0.98);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.2);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.3);
+}
+
+/* Default to light mode */
+:root {
+  --primary-color: #667eea;
+  --secondary-color: #764ba2;
+  --background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --surface: rgba(255, 255, 255, 0.95);
+  --surface-variant: rgba(255, 255, 255, 0.7);
+  --text-primary: #333;
+  --text-secondary: #666;
+  --text-tertiary: #999;
+  --border-color: rgba(255, 255, 255, 0.2);
+  --hover-overlay: rgba(102, 126, 234, 0.1);
+  --card-background: rgba(255, 255, 255, 0.9);
+  --toolbar-background: rgba(255, 255, 255, 0.7);
+  --sidebar-background: rgba(255, 255, 255, 0.95);
+  --scrollbar-thumb: rgba(0, 0, 0, 0.2);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.3);
+}
+
+/* Global Styles */
+html, body { 
+  height: 100%; 
+  margin: 0;
+}
+
+body { 
+  font-family: 'Roboto', 'Helvetica Neue', sans-serif;
+  background: var(--background);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Smooth transitions */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+  
+  &:hover {
+    background: var(--scrollbar-thumb-hover);
+  }
+}

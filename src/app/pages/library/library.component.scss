@@ -1,0 +1,106 @@
+.library-container {
+  padding: 40px;
+  padding-bottom: 200px;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  h1 {
+    color: white; /* Keep white to contrast with page background */
+    font-size: 36px;
+    margin: 0 0 32px 0;
+  }
+
+  ::ng-deep {
+    .mat-mdc-tab-group {
+      background: transparent;
+    }
+
+    .mat-mdc-tab-label {
+      color: white !important; /* Keep white for contrast */
+      font-size: 16px !important;
+
+      &.mat-mdc-tab-label-active {
+        color: var(--primary-color) !important;
+      }
+    }
+
+    .mdc-tab {
+      background: transparent;
+    }
+
+    .mat-mdc-tab-body-content {
+      padding: 24px 0;
+    }
+  }
+
+  .tab-content {
+    padding: 24px 0;
+  }
+
+  .album-card,
+  .artist-card {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--card-background);
+
+    &:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    img {
+      width: 100%;
+      height: 60%;
+      object-fit: cover;
+    }
+
+    .album-info,
+    .artist-info {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+
+      h3 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      p {
+        margin: 4px 0 0 0;
+        font-size: 12px;
+        color: var(--text-secondary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+  }
+
+  .loading {
+    text-align: center;
+    padding: 60px 20px;
+    color: white;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .library-container {
+    padding: 16px;
+
+    h1 {
+      font-size: 24px;
+    }
+  }
+}

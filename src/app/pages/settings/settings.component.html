@@ -1,0 +1,36 @@
+<div class="settings-container">
+  <h1>Settings</h1>
+
+  <form [formGroup]="settingsForm" (ngSubmit)="saveSettings()" class="settings-form">
+    <mat-form-field appearance="outline">
+      <mat-label>Audio Quality</mat-label>
+      <mat-select formControlName="audioQuality">
+        <mat-option value="low">Low (96 kbps)</mat-option>
+        <mat-option value="medium">Medium (192 kbps)</mat-option>
+        <mat-option value="high">High (320 kbps)</mat-option>
+        <mat-option value="lossless">Lossless (FLAC)</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Theme</mat-label>
+      <mat-select formControlName="theme">
+        <mat-option value="dark">Dark</mat-option>
+        <mat-option value="light">Light</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <div class="checkbox-group">
+      <label>
+        <input type="checkbox" formControlName="notifications">
+        <span>Enable Notifications</span>
+      </label>
+      <label>
+        <input type="checkbox" formControlName="privateSession">
+        <span>Private Session</span>
+      </label>
+    </div>
+
+    <button mat-raised-button color="primary" type="submit">Save Settings</button>
+  </form>
+</div>

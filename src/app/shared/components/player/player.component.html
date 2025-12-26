@@ -1,0 +1,64 @@
+<div class="player-container" *ngIf="player$ | async as playerState">
+  <div class="player-content">
+    <!-- Now Playing Info -->
+    <div class="now-playing" *ngIf="playerState.currentTrack">
+      <img [src]="playerState.currentTrack.coverUrl" alt="Cover" class="cover-image">
+      <div class="track-info">
+        <h4 class="track-title">{{ playerState.currentTrack.title }}</h4>
+        <p class="track-artist">{{ playerState.currentTrack.artist.name }}</p>
+      </div>
+    </div>
+
+    <div class="now-playing" *ngIf="!playerState.currentTrack">
+      <div class="no-track">No track playing</div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-section">
+      <span class="time">{{ formatTime(playerState.currentTime) }}</span>
+      <input
+        type="range"
+        class="progress-slider"
+        min="0"
+        [max]="playerState.duration"
+        [value]="playerState.currentTime"
+        (change)="onProgressChange($event)"
+      >
+      <span class="time">{{ formatTime(playerState.duration) }}</span>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button mat-icon-button (click)="toggleShuffle()" [class.active]="playerState.shuffle">
+        <mat-icon>shuffle</mat-icon>
+      </button>
+      <button mat-icon-button (click)="previousTrack()">
+        <mat-icon>skip_previous</mat-icon>
+      </button>
+      <button mat-fab (click)="playPause()" class="play-button">
+        <mat-icon>{{ playerState.isPlaying ? 'pause' : 'play_arrow' }}</mat-icon>
+      </button>
+      <button mat-icon-button (click)="nextTrack()">
+        <mat-icon>skip_next</mat-icon>
+      </button>
+      <button mat-icon-button (click)="toggleRepeat()" [class.active]="playerState.repeat !== 'off'">
+        <mat-icon>{{ playerState.repeat === 'one' ? 'repeat_one' : 'repeat' }}</mat-icon>
+      </button>
+    </div>
+
+    <!-- Volume Control -->
+    <div class="volume-section">
+      <mat-icon class="volume-icon">volume_up</mat-icon>
+      <input
+        type="range"
+        class="volume-slider"
+        min="0"
+        max="1"
+        step="0.01"
+        [value]="playerState.volume"
+        (change)="onVolumeChange($event)"
+      >
+    </div>
+  </div>
+</div>
+

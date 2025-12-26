@@ -1,0 +1,33 @@
+<mat-toolbar color="primary" class="header">
+  <div class="header-left">
+    <button mat-icon-button (click)="onToggleNav()" matTooltip="Toggle Navigation">
+      <mat-icon>menu</mat-icon>
+    </button>
+    <span class="logo">🎵 MyMusic</span>
+  </div>
+
+  <div class="header-center">
+    <app-search (selected)="onSearchSelected($event)"></app-search>
+  </div>
+
+  <div class="header-right">
+    <button mat-icon-button (click)="onToggleTheme()" matTooltip="Toggle Dark Mode">
+      <mat-icon>{{ (currentTheme$ | async) === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon>
+    </button>
+    <button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="Account Menu">
+      <mat-icon>account_circle</mat-icon>
+    </button>
+  </div>
+</mat-toolbar>
+
+<mat-menu #userMenu="matMenu" class="user-menu">
+  <button mat-menu-item>
+    <mat-icon>settings</mat-icon>
+    <span>Settings</span>
+  </button>
+  <mat-divider></mat-divider>
+  <button mat-menu-item (click)="onLogout()">
+    <mat-icon>logout</mat-icon>
+    <span>Logout</span>
+  </button>
+</mat-menu>

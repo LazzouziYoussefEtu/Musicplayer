@@ -1,0 +1,54 @@
+<div class="library-container">
+  <h1>Your Music Library</h1>
+
+  <mat-tab-group (selectedIndexChange)="selectedTabIndex = $event">
+    <!-- Songs Tab -->
+    <mat-tab label="Songs" (click)="selectedTabIndex = 0">
+      <div class="tab-content">
+        <mat-grid-list cols="6" rowHeight="300px" gutterSize="16px">
+          <mat-grid-tile *ngFor="let song of songs">
+            <app-song-card [song]="song"></app-song-card>
+          </mat-grid-tile>
+        </mat-grid-list>
+      </div>
+    </mat-tab>
+
+    <!-- Albums Tab -->
+    <mat-tab label="Albums" (click)="selectedTabIndex = 1">
+      <div class="tab-content">
+        <mat-grid-list cols="6" rowHeight="300px" gutterSize="16px">
+          <mat-grid-tile *ngFor="let album of albums">
+            <div class="album-card">
+              <img [src]="album.coverUrl" [alt]="album.title" class="album-cover">
+              <div class="album-info">
+                <h3>{{ album.title }}</h3>
+                <p>{{ album.artist.name }}</p>
+              </div>
+            </div>
+          </mat-grid-tile>
+        </mat-grid-list>
+      </div>
+    </mat-tab>
+
+    <!-- Artists Tab -->
+    <mat-tab label="Artists" (click)="selectedTabIndex = 2">
+      <div class="tab-content">
+        <mat-grid-list cols="6" rowHeight="300px" gutterSize="16px">
+          <mat-grid-tile *ngFor="let artist of artists">
+            <div class="artist-card">
+              <img [src]="artist.imageUrl" [alt]="artist.name" class="artist-image">
+              <div class="artist-info">
+                <h3>{{ artist.name }}</h3>
+                <p>{{ artist.followers }} followers</p>
+              </div>
+            </div>
+          </mat-grid-tile>
+        </mat-grid-list>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+
+  <div class="loading" *ngIf="isLoading">
+    <p>Loading library...</p>
+  </div>
+</div>

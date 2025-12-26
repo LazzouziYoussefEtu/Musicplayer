@@ -1,0 +1,49 @@
+.settings-container {
+  padding: 40px;
+  max-width: 600px;
+  margin: 0 auto;
+  padding-bottom: 200px;
+
+  h1 {
+    color: white;
+    font-size: 36px;
+    margin: 0 0 32px 0;
+  }
+
+  .settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
+    mat-form-field {
+      width: 100%;
+    }
+
+    .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+
+      label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: white;
+        cursor: pointer;
+
+        input[type='checkbox'] {
+          cursor: pointer;
+        }
+
+        span {
+          font-size: 14px;
+        }
+      }
+    }
+
+    button {
+      align-self: flex-start;
+      margin-top: 16px;
+    }
+  }
+}

@@ -1,0 +1,15 @@
+<div class="playlists-container">
+  <h1>Your Playlists</h1>
+
+  <mat-grid-list cols="6" rowHeight="300px" gutterSize="16px">
+    <mat-grid-tile *ngFor="let playlist of playlists">
+      <div class="playlist-card" [routerLink]="['/playlists', playlist.id]">
+        <img [src]="playlist.coverUrl" [alt]="playlist.title" class="playlist-cover">
+        <div class="playlist-overlay">
+          <h3>{{ playlist.title }}</h3>
+          <p>{{ playlist.songCount }} songs</p>
+        </div>
+      </div>
+    </mat-grid-tile>
+  </mat-grid-list>
+</div>
