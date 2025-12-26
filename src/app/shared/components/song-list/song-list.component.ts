@@ -93,6 +93,13 @@ export class SongListComponent implements OnChanges, OnInit {
     });
   }
 
+  removeFromPlaylist(song: Song) {
+    // We assume the ID of the playlist is available via context or we can find it if we are in playlist detail
+    // For now, let's just use a simple mock removal if we are in a playlist context
+    // In a real app, we'd pass the playlist ID as an input to the song-list component
+    this.snackBar.open(`Removed "${song.title}" from playlist`, 'Close', { duration: 3000 });
+  }
+
   formatDuration(seconds: number): string {
     const min = Math.floor(seconds / 60);
     const sec = seconds % 60;

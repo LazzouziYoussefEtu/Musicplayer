@@ -53,5 +53,13 @@
         </mat-list-item>
       </mat-nav-list>
     </div>
+
+    <div class="user-profile-section" *ngIf="user$ | async as user">
+      <img [src]="user.avatarUrl" [alt]="user.name" class="user-avatar">
+      <div class="user-info">
+        <span class="user-name">{{ user.name }}</span>
+        <span class="user-status">Premium</span>
+      </div>
+    </div>
   </div>
 </aside>

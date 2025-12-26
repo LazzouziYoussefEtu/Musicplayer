@@ -79,6 +79,10 @@
           <mat-icon>playlist_add</mat-icon>
           <span>Add to playlist</span>
         </button>
+        <button mat-menu-item *ngIf="context === 'playlist'" (click)="removeFromPlaylist(song)">
+          <mat-icon>playlist_remove</mat-icon>
+          <span>Remove from this playlist</span>
+        </button>
         <mat-divider></mat-divider>
         <button mat-menu-item [routerLink]="['/artist', song.artist.id]">
           <mat-icon>person</mat-icon>

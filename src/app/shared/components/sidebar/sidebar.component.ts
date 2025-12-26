@@ -6,7 +6,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { MusicService } from '../../../core/services/music.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Playlist } from '../../../core/models/music.model';
+import { User } from '../../../core/models/user.model';
 import { Observable } from 'rxjs';
 
 interface NavItem {
@@ -41,11 +43,18 @@ export class SidebarComponent implements OnInit {
   ];
 
   playlists$: Observable<Playlist[]> | null = null;
+  user$: Observable<User | null>;
 
   @Input() isOpen = false;
   @HostBinding('class.open') get opened() { return this.isOpen; }
 
-  constructor(public router: Router, private musicService: MusicService) {}
+  constructor(
+    public router: Router, 
+    private musicService: MusicService,
+    private authService: AuthService
+  ) {
+    this.user$ = this.authService.user$;
+  }
 
   ngOnInit(): void {
     this.playlists$ = this.musicService.getPlaylists();

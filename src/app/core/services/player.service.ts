@@ -99,13 +99,19 @@ export class PlayerService {
     const state = this.playerState$.value;
     if (state.queue.length === 0) return;
 
-    let nextIndex = state.currentIndex + 1;
-    if (nextIndex >= state.queue.length) {
-      if (state.repeat === 'all') {
-        nextIndex = 0;
-      } else {
-        this.stop();
-        return;
+    let nextIndex: number;
+    
+    if (state.shuffle) {
+      nextIndex = Math.floor(Math.random() * state.queue.length);
+    } else {
+      nextIndex = state.currentIndex + 1;
+      if (nextIndex >= state.queue.length) {
+        if (state.repeat === 'all') {
+          nextIndex = 0;
+        } else {
+          this.stop();
+          return;
+        }
       }
     }
 
@@ -116,9 +122,19 @@ export class PlayerService {
     const state = this.playerState$.value;
     if (state.queue.length === 0) return;
 
-    let prevIndex = state.currentIndex - 1;
-    if (prevIndex < 0) {
-      prevIndex = state.queue.length - 1;
+    let prevIndex: number;
+    
+    if (state.shuffle) {
+      prevIndex = Math.floor(Math.random() * state.queue.length);
+    } else {
+      prevIndex = state.currentIndex - 1;
+      if (prevIndex < 0) {
+        if (state.repeat === 'all') {
+          prevIndex = state.queue.length - 1;
+        } else {
+          prevIndex = 0;
+        }
+      }
     }
 
     this.play(state.queue[prevIndex], state.queue);
