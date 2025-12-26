@@ -3,13 +3,13 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTableModule } from '@angular/material/table';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { Observable, switchMap, combineLatest, map } from 'rxjs';
+import { Observable, combineLatest, switchMap } from 'rxjs';
 import { MusicService } from '../../core/services/music.service';
 import { PlayerService } from '../../core/services/player.service';
 import { Album, Song } from '../../core/models/music.model';
+import { SongListComponent } from '../../shared/components/song-list/song-list.component';
 
 @Component({
   selector: 'app-album-detail',
@@ -19,10 +19,10 @@ import { Album, Song } from '../../core/models/music.model';
     RouterModule,
     MatButtonModule,
     MatIconModule,
-    MatTableModule,
     MatMenuModule,
     MatTooltipModule,
-    DatePipe
+    DatePipe,
+    SongListComponent
   ],
   template: `
     <div class="detail-container" *ngIf="vm$ | async as vm">
@@ -73,47 +73,16 @@ import { Album, Song } from '../../core/models/music.model';
 
       <!-- Content Section -->
       <div class="content-section">
-        <table mat-table [dataSource]="vm.songs" class="songs-table">
-          
-          <!-- Index Column -->
-          <ng-container matColumnDef="index">
-            <th mat-header-cell *matHeaderCellDef class="col-index">#</th>
-            <td mat-cell *matCellDef="let song; let i = index" class="col-index">
-              <span class="index-num">{{ i + 1 }}</span>
-              <button mat-icon-button class="play-icon" (click)="playSong(song, vm.songs, i)">
-                <mat-icon>play_arrow</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-
-          <!-- Title Column -->
-          <ng-container matColumnDef="title">
-            <th mat-header-cell *matHeaderCellDef>Title</th>
-            <td mat-cell *matCellDef="let song" class="col-title">
-              <span class="song-name">{{ song.title }}</span>
-              <span class="song-artist-mobile">{{ song.artist.name }}</span>
-            </td>
-          </ng-container>
-
-          <!-- Duration Column -->
-          <ng-container matColumnDef="duration">
-            <th mat-header-cell *matHeaderCellDef class="col-duration">
-              <mat-icon>schedule</mat-icon>
-            </th>
-            <td mat-cell *matCellDef="let song" class="col-duration">
-              {{ formatDuration(song.duration) }}
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="song-row">
-          </tr>
-        </table>
+        <app-song-list 
+          [songs]="vm.songs"
+          [showAlbum]="false"
+          [context]="'album'">
+        </app-song-list>
       </div>
     </div>
   `,
-  styles: [
-    `:host {
+  styles: [`
+    :host {
       display: block;
       height: 100%;
       overflow-y: auto;
@@ -148,7 +117,7 @@ import { Album, Song } from '../../core/models/music.model';
 
     .info-section {
       flex: 1;
-      color: var(--text-primary);
+      color: white;
 
       .type {
         text-transform: uppercase;
@@ -172,7 +141,6 @@ import { Album, Song } from '../../core/models/music.model';
         gap: 8px;
         font-size: 14px;
         font-weight: 500;
-        color: var(--text-primary);
 
         .artist-info {
           display: flex;
@@ -187,7 +155,7 @@ import { Album, Song } from '../../core/models/music.model';
           }
 
           .artist-link {
-            color: var(--text-primary);
+            color: white;
             text-decoration: none;
             font-weight: 700;
             &:hover { text-decoration: underline; }
@@ -195,7 +163,7 @@ import { Album, Song } from '../../core/models/music.model';
         }
 
         .separator { margin: 0 4px; }
-        .stats { color: var(--text-secondary); }
+        .stats { color: rgba(255,255,255,0.7); }
       }
 
       .actions {
@@ -206,8 +174,8 @@ import { Album, Song } from '../../core/models/music.model';
 
         .play-btn { transform: scale(1.1); }
         .action-btn {
-          color: var(--text-secondary);
-          &:hover { color: var(--text-primary); }
+          color: rgba(255,255,255,0.7);
+          &:hover { color: white; }
         }
       }
     }
@@ -216,91 +184,10 @@ import { Album, Song } from '../../core/models/music.model';
       padding: 0 32px;
       background: linear-gradient(to bottom, rgba(0,0,0,0.1), var(--background) 200px);
     }
-
-    .songs-table {
-      width: 100%;
-      background: transparent;
-
-      th.mat-header-cell {
-        background: transparent;
-        color: var(--text-secondary);
-        border-bottom: 1px solid var(--border-color);
-        font-size: 12px;
-        text-transform: uppercase;
-        padding: 8px 16px;
-      }
-
-      td.mat-cell {
-        padding: 8px 16px;
-        border-bottom: 1px solid transparent;
-        color: var(--text-secondary);
-        font-size: 14px;
-
-        &.col-title { color: var(--text-primary); }
-      }
-
-      .song-row {
-        transition: background-color 0.2s ease;
-        cursor: pointer;
-        border-radius: 4px;
-
-        &:hover {
-          background-color: var(--hover-overlay);
-          .col-index .index-num { display: none; }
-          .col-index .play-icon { display: inline-block; }
-          .col-title .song-name { color: var(--primary-color); }
-        }
-      }
-
-      .col-index {
-        width: 48px;
-        text-align: center;
-        position: relative;
-
-        .play-icon {
-          display: none;
-          color: var(--text-primary);
-          margin-left: -12px;
-        }
-      }
-
-      .col-title {
-        .song-artist-mobile {
-          display: none;
-          font-size: 12px;
-          color: var(--text-secondary);
-        }
-      }
-
-      .col-duration {
-        width: 80px;
-        text-align: right;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .header-section {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        padding: 24px;
-      }
-
-      .info-section {
-        .title { font-size: 32px; }
-        .meta-info { justify-content: center; flex-wrap: wrap; }
-        .actions { justify-content: center; }
-      }
-
-      .content-section { padding: 0 16px; }
-      
-      .col-title .song-artist-mobile { display: block; }
-    }
   `]
 })
 export class AlbumDetailComponent implements OnInit {
   vm$: Observable<{ album: Album, songs: Song[] }> | null = null;
-  displayedColumns: string[] = ['index', 'title', 'duration'];
 
   constructor(
     private route: ActivatedRoute,
@@ -328,20 +215,10 @@ export class AlbumDetailComponent implements OnInit {
     }
   }
 
-  playSong(song: Song, queue: Song[], index: number): void {
-    this.playerService.playQueue(queue, index);
-  }
-
   getTotalDuration(songs: Song[]): string {
     const totalSeconds = songs.reduce((acc, song) => acc + song.duration, 0);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
     return `${minutes} min ${seconds} sec`;
-  }
-
-  formatDuration(seconds: number): string {
-    const min = Math.floor(seconds / 60);
-    const sec = seconds % 60;
-    return `${min}:${sec.toString().padStart(2, '0')}`;
   }
 }

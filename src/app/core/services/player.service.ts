@@ -158,6 +158,16 @@ export class PlayerService {
     });
   }
 
+  // Add to queue
+  addToQueue(song: Song): void {
+    const state = this.playerState$.value;
+    const newQueue = [...state.queue, song];
+    this.playerState$.next({
+      ...state,
+      queue: newQueue
+    });
+  }
+
   // Clear player
   clear(): void {
     this.playerState$.next(this.initialState);

@@ -1,0 +1,97 @@
+<table mat-table [dataSource]="songs" class="songs-table">
+  
+  <!-- Index Column -->
+  <ng-container matColumnDef="index">
+    <th mat-header-cell *matHeaderCellDef class="col-index">#</th>
+    <td mat-cell *matCellDef="let song; let i = index" class="col-index">
+      <span class="index-num">{{ i + 1 }}</span>
+      <button mat-icon-button class="play-icon" (click)="playSong(i)">
+        <mat-icon>play_arrow</mat-icon>
+      </button>
+    </td>
+  </ng-container>
+
+  <!-- Title Column (includes Artist on mobile or if Artist col is hidden) -->
+  <ng-container matColumnDef="title">
+    <th mat-header-cell *matHeaderCellDef>Title</th>
+    <td mat-cell *matCellDef="let song" class="col-title">
+      <div class="song-info">
+        <img [src]="song.coverUrl" class="song-thumb" loading="lazy">
+        <div class="text">
+          <span class="song-name" [class.highlight]="(playerService.player$ | async)?.currentTrack?.id === song.id">{{ song.title }}</span>
+          <!-- Show artist here if we are NOT in artist context (so we see artist name) -->
+          <!-- Or always show it small like Spotify? -->
+          <span class="song-artist" *ngIf="showArtist">{{ song.artist.name }}</span>
+        </div>
+      </div>
+    </td>
+  </ng-container>
+
+  <!-- Album Column -->
+  <ng-container matColumnDef="album">
+    <th mat-header-cell *matHeaderCellDef class="hide-mobile">Album</th>
+    <td mat-cell *matCellDef="let song" class="hide-mobile">
+      <a [routerLink]="['/album', song.album.id]" class="table-link" (click)="$event.stopPropagation()">
+        {{ song.album.title }}
+      </a>
+    </td>
+  </ng-container>
+
+  <!-- Date Added Column -->
+  <ng-container matColumnDef="date">
+    <th mat-header-cell *matHeaderCellDef class="hide-mobile">Date Added</th>
+    <td mat-cell *matCellDef="let song" class="hide-mobile text-secondary">
+      {{ song.createdAt | date:'mediumDate' }}
+    </td>
+  </ng-container>
+
+  <!-- Plays Column -->
+  <ng-container matColumnDef="plays">
+    <th mat-header-cell *matHeaderCellDef class="hide-mobile align-right">Plays</th>
+    <td mat-cell *matCellDef="let song" class="hide-mobile align-right text-secondary">
+      {{ song.playCount | number }}
+    </td>
+  </ng-container>
+
+  <!-- Duration Column -->
+  <ng-container matColumnDef="duration">
+    <th mat-header-cell *matHeaderCellDef class="col-duration align-right">
+      <mat-icon class="clock-icon">schedule</mat-icon>
+    </th>
+    <td mat-cell *matCellDef="let song" class="col-duration align-right text-secondary">
+      {{ formatDuration(song.duration) }}
+    </td>
+  </ng-container>
+
+  <!-- Actions Column -->
+  <ng-container matColumnDef="actions">
+    <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+    <td mat-cell *matCellDef="let song" class="col-actions" (click)="$event.stopPropagation()">
+      <button mat-icon-button [matMenuTriggerFor]="menu" class="action-btn">
+        <mat-icon>more_horiz</mat-icon>
+      </button>
+      <mat-menu #menu="matMenu">
+        <button mat-menu-item (click)="addToQueue(song)">
+          <mat-icon>add_to_queue</mat-icon>
+          <span>Add to queue</span>
+        </button>
+        <button mat-menu-item>
+          <mat-icon>playlist_add</mat-icon>
+          <span>Add to playlist</span>
+        </button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item [routerLink]="['/artist', song.artist.id]">
+          <mat-icon>person</mat-icon>
+          <span>Go to artist</span>
+        </button>
+        <button mat-menu-item [routerLink]="['/album', song.album.id]">
+          <mat-icon>album</mat-icon>
+          <span>Go to album</span>
+        </button>
+      </mat-menu>
+    </td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+  <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="song-row"></tr>
+</table>
