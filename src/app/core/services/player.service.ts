@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, PLATFORM_ID, Inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { PlayerState, Song } from '../models/music.model';
 
@@ -9,7 +10,7 @@ export class PlayerService {
     isPlaying: false,
     queue: [],
     currentIndex: 0,
-    volume: 1,
+    volume: 0.7,
     currentTime: 0,
     duration: 0,
     repeat: 'off',
@@ -18,56 +19,82 @@ export class PlayerService {
 
   private playerState$ = new BehaviorSubject<PlayerState>(this.initialState);
   public player$ = this.playerState$.asObservable();
+  
+  private audio: HTMLAudioElement | null = null;
 
-  constructor() {}
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+    if (isPlatformBrowser(this.platformId)) {
+      this.audio = new Audio();
+      this.setupAudioListeners();
+    }
+  }
 
-  // Getters
+  private setupAudioListeners(): void {
+    if (!this.audio) return;
+
+    this.audio.addEventListener('timeupdate', () => {
+      this.updateState({ currentTime: this.audio?.currentTime || 0 });
+    });
+
+    this.audio.addEventListener('durationchange', () => {
+      this.updateState({ duration: this.audio?.duration || 0 });
+    });
+
+    this.audio.addEventListener('ended', () => {
+      this.nextTrack();
+    });
+
+    this.audio.addEventListener('play', () => {
+      this.updateState({ isPlaying: true });
+    });
+
+    this.audio.addEventListener('pause', () => {
+      this.updateState({ isPlaying: false });
+    });
+  }
+
+  private updateState(newState: Partial<PlayerState>): void {
+    this.playerState$.next({
+      ...this.playerState$.value,
+      ...newState
+    });
+  }
+
   getCurrentState(): PlayerState {
     return this.playerState$.value;
   }
 
-  // Play song
   play(song: Song, queue: Song[] = [song]): void {
-    const state = this.playerState$.value;
-    this.playerState$.next({
-      ...state,
+    const currentIndex = queue.findIndex(s => s.id === song.id);
+    this.updateState({
       currentTrack: song,
-      isPlaying: true,
       queue,
-      currentIndex: 0,
-      currentTime: 0,
-      duration: song.duration
+      currentIndex: currentIndex >= 0 ? currentIndex : 0,
+      isPlaying: true
     });
+
+    if (this.audio) {
+      this.audio.src = song.audioUrl;
+      this.audio.play().catch(err => console.error('Audio play failed:', err));
+    }
   }
 
-  // Play queue
   playQueue(queue: Song[], startIndex: number = 0): void {
     if (queue.length === 0) return;
-    
-    const state = this.playerState$.value;
-    this.playerState$.next({
-      ...state,
-      currentTrack: queue[startIndex],
-      isPlaying: true,
-      queue,
-      currentIndex: startIndex,
-      currentTime: 0,
-      duration: queue[startIndex].duration
-    });
+    this.play(queue[startIndex], queue);
   }
 
-  // Pause/Resume
   togglePlayPause(): void {
     const state = this.playerState$.value;
-    if (!state.currentTrack) return;
-    
-    this.playerState$.next({
-      ...state,
-      isPlaying: !state.isPlaying
-    });
+    if (!state.currentTrack || !this.audio) return;
+
+    if (state.isPlaying) {
+      this.audio.pause();
+    } else {
+      this.audio.play().catch(err => console.error('Audio play failed:', err));
+    }
   }
 
-  // Next track
   nextTrack(): void {
     const state = this.playerState$.value;
     if (state.queue.length === 0) return;
@@ -77,21 +104,14 @@ export class PlayerService {
       if (state.repeat === 'all') {
         nextIndex = 0;
       } else {
-        return; // Stop at end if repeat is off
+        this.stop();
+        return;
       }
     }
 
-    const nextTrack = state.queue[nextIndex];
-    this.playerState$.next({
-      ...state,
-      currentIndex: nextIndex,
-      currentTrack: nextTrack,
-      currentTime: 0,
-      duration: nextTrack.duration
-    });
+    this.play(state.queue[nextIndex], state.queue);
   }
 
-  // Previous track
   previousTrack(): void {
     const state = this.playerState$.value;
     if (state.queue.length === 0) return;
@@ -101,85 +121,45 @@ export class PlayerService {
       prevIndex = state.queue.length - 1;
     }
 
-    const prevTrack = state.queue[prevIndex];
-    this.playerState$.next({
-      ...state,
-      currentIndex: prevIndex,
-      currentTrack: prevTrack,
-      currentTime: 0,
-      duration: prevTrack.duration
-    });
+    this.play(state.queue[prevIndex], state.queue);
   }
 
-  // Set volume (0-1)
   setVolume(volume: number): void {
-    const state = this.playerState$.value;
-    this.playerState$.next({
-      ...state,
-      volume: Math.max(0, Math.min(1, volume))
-    });
+    const normalizedVolume = Math.max(0, Math.min(1, volume));
+    this.updateState({ volume: normalizedVolume });
+    if (this.audio) {
+      this.audio.volume = normalizedVolume;
+    }
   }
 
-  // Set current time
   setCurrentTime(time: number): void {
-    const state = this.playerState$.value;
-    this.playerState$.next({
-      ...state,
-      currentTime: time
-    });
+    if (this.audio) {
+      this.audio.currentTime = time;
+      this.updateState({ currentTime: time });
+    }
   }
 
-  // Set duration
-  setDuration(duration: number): void {
+  addToQueue(song: Song): void {
     const state = this.playerState$.value;
-    this.playerState$.next({
-      ...state,
-      duration
-    });
+    this.updateState({ queue: [...state.queue, song] });
   }
 
-  // Toggle repeat (off -> all -> one -> off)
   toggleRepeat(): void {
     const state = this.playerState$.value;
     const repeat = state.repeat === 'off' ? 'all' : state.repeat === 'all' ? 'one' : 'off';
-    
-    this.playerState$.next({
-      ...state,
-      repeat
-    });
+    this.updateState({ repeat });
   }
 
-  // Toggle shuffle
   toggleShuffle(): void {
     const state = this.playerState$.value;
-    this.playerState$.next({
-      ...state,
-      shuffle: !state.shuffle
-    });
+    this.updateState({ shuffle: !state.shuffle });
   }
 
-  // Add to queue
-  addToQueue(song: Song): void {
-    const state = this.playerState$.value;
-    const newQueue = [...state.queue, song];
-    this.playerState$.next({
-      ...state,
-      queue: newQueue
-    });
-  }
-
-  // Clear player
-  clear(): void {
-    this.playerState$.next(this.initialState);
-  }
-
-  // Stop playback
   stop(): void {
-    const state = this.playerState$.value;
-    this.playerState$.next({
-      ...state,
-      isPlaying: false,
-      currentTime: 0
-    });
+    if (this.audio) {
+      this.audio.pause();
+      this.audio.currentTime = 0;
+    }
+    this.updateState({ isPlaying: false, currentTime: 0 });
   }
 }
